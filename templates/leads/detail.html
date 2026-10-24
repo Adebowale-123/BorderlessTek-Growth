@@ -1,0 +1,69 @@
+{% extends "base.html" %}
+{% block title %}{% if lead %}{{ lead.parent_name }}{% else %}New lead{% endif %}{% endblock %}
+{% block content %}
+<a class="btn btn-sm" href="{% url 'leads:board' %}"><svg class="i"><use href="#i-arrow-left"/></svg>All leads</a>
+<div class="page-head" style="margin-top:16px">
+  <div><h1 class="mb-0">{% if lead %}{{ lead.parent_name }}{% else %}New lead{% endif %}</h1>
+    <p>{% if lead %}{{ lead.get_stage_display }} · {{ lead.get_channel_display }}{% if lead.child_age %} · child {{ lead.child_age }}{% endif %}{% else %}A parent who showed interest. Only record what they shared with you, and only email or WhatsApp them if they agreed.{% endif %}</p></div>
+  {% if lead %}
+  <div class="row">
+    {% for s, label in lead.Stage.choices %}{% if s != lead.stage %}
+      <form method="post" action="{% url 'leads:set_stage' lead.pk s %}">{% csrf_token %}<input type="hidden" name="next" value="{{ request.path }}"><button class="btn btn-sm {% if s == 'enrolled' %}btn-primary{% elif s == 'call_booked' %}btn-warm{% endif %}" type="submit">{% if s == 'enrolled' %}🎉 {% elif s == 'call_booked' %}📞 {% endif %}{{ label }}</button></form>
+    {% endif %}{% endfor %}
+  </div>
+  {% endif %}
+</div>
+
+<div class="grid grid-2" style="grid-template-columns:minmax(0,1.3fr) minmax(0,1fr)">
+  <form method="post" class="card">
+    {% csrf_token %}
+    {% if opp %}<input type="hidden" name="opportunity" value="{{ opp.pk }}">{% endif %}
+    <div class="card-head"><h3>Details</h3></div>
+    <div class="form-grid">
+      {% include "_field.html" with field=form.parent_name %}
+      {% include "_field.html" with field=form.channel %}
+      {% include "_field.html" with field=form.profile_url %}
+      {% include "_field.html" with field=form.stage %}
+      {% include "_field.html" with field=form.email %}
+      {% include "_field.html" with field=form.phone %}
+      {% include "_field.html" with field=form.country %}
+      {% include "_field.html" with field=form.child_age %}
+      {% include "_field.html" with field=form.interests %}
+      {% include "_field.html" with field=form.call_at %}
+      {% include "_field.html" with field=form.next_follow_up %}
+      {% include "_field.html" with field=form.consent %}
+    </div>
+    <div style="margin-top:14px">{% include "_field.html" with field=form.notes %}</div>
+    <div class="row" style="margin-top:16px"><button class="btn btn-primary" type="submit"><svg class="i"><use href="#i-check"/></svg>Save</button></div>
+  </form>
+
+  <div class="stack">
+    {% if message %}
+    <section class="card">
+      <div class="card-head"><h3>✉️ Next follow-up message</h3><span class="badge">{{ lead.follow_ups_sent|add:1 }} of 3</span></div>
+      <textarea id="followup" style="min-height:150px">{{ message }}</textarea>
+      <div class="row" style="margin-top:10px">
+        <button class="btn btn-sm btn-warm" type="button" data-copy="#followup"><svg class="i"><use href="#i-copy"/></svg>Copy message</button>
+        {% if lead.profile_url %}<a class="btn btn-sm" href="{{ lead.profile_url }}" target="_blank" rel="noopener"><svg class="i"><use href="#i-external"/></svg>Open conversation</a>{% endif %}
+        <form method="post" action="{% url 'leads:followed_up' lead.pk %}">{% csrf_token %}<button class="btn btn-sm btn-primary" type="submit"><svg class="i"><use href="#i-check"/></svg>I sent it</button></form>
+      </div>
+      <p class="faint small" style="margin:10px 0 0">{% if lead.next_follow_up %}Planned for {{ lead.next_follow_up|date:"l j M" }}.{% endif %} Send it where you're already talking{% if not lead.consent %}. Only use email or WhatsApp if they agreed{% endif %}.</p>
+    </section>
+    {% endif %}
+    {% if opp %}
+    <section class="card">
+      <div class="card-head"><h3>Where they came from</h3><a class="small" href="{{ opp.url }}" target="_blank" rel="noopener">Open post ↗</a></div>
+      <b>{{ opp.title }}</b>
+      <p class="muted small" style="margin-top:6px">{{ opp.body|truncatechars:400 }}</p>
+    </section>
+    {% endif %}
+    {% if lead %}
+    <section class="card">
+      <div class="card-head"><h3>History</h3></div>
+      {% for e in events %}<div class="list-row"><div class="grow"><b style="font-weight:600">{{ e.text }}</b><span class="small faint">{{ e.at|date:"D j M, H:i" }}{% if e.by %} · {{ e.by }}{% endif %}</span></div></div>
+      {% empty %}<p class="faint">Nothing yet.</p>{% endfor %}
+    </section>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}

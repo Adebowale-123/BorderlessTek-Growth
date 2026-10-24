@@ -1,0 +1,26 @@
+{% extends "base.html" %}
+{% block title %}Leads{% endblock %}
+{% block content %}
+<div class="page-head">
+  <div><h1 class="mb-0">Leads</h1><p>Every family we're talking to, from first contact to enrolment. Click a card to update it or get the next follow-up message.</p></div>
+  <div class="row">
+    <form method="get"><input type="text" name="q" value="{{ q }}" placeholder="Search name, email, notes…" style="min-width:220px"></form>
+    <a class="btn btn-primary" href="{% url 'leads:new' %}"><svg class="i"><use href="#i-plus"/></svg>Add lead</a>
+  </div>
+</div>
+<div class="kanban">
+  {% for stage, label, items in columns %}
+  <div class="col">
+    <h4>{{ label }} <span>{{ items|length }}</span></h4>
+    {% for l in items %}
+      <a class="lead-card" href="{% url 'leads:detail' l.pk %}">
+        <b>{{ l.parent_name }}</b>
+        <div class="small">{{ l.get_channel_display }}{% if l.child_age %} · child {{ l.child_age }}{% endif %}{% if l.interests %} · {{ l.interests|truncatechars:24 }}{% endif %}</div>
+        {% if l.stage == "call_booked" and l.call_at %}<div class="small" style="margin-top:4px">📞 {{ l.call_at|date:"D j M, H:i" }}</div>
+        {% elif l.next_follow_up %}<div class="small {% if l.next_follow_up <= today %}due{% endif %}" style="margin-top:4px">{% if l.next_follow_up <= today %}Follow-up due{% else %}Follow up {{ l.next_follow_up|date:"D j M" }}{% endif %}</div>{% endif %}
+      </a>
+    {% empty %}<p class="faint small" style="margin:6px 4px">—</p>{% endfor %}
+  </div>
+  {% endfor %}
+</div>
+{% endblock %}

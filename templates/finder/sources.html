@@ -1,0 +1,48 @@
+{% extends "base.html" %}
+{% block title %}Sources{% endblock %}
+{% block content %}
+<div class="page-head"><div><h1 class="mb-0">Where we look</h1>
+  <p>Public places where parents ask for advice. Each source is checked every {{ site.scan_every_hours }} hours; only parent conversations are kept.</p></div></div>
+
+<section class="card" style="margin-bottom:16px">
+  <div class="trade-list">
+  {% for s in sources %}
+    <div class="titem">
+      <span class="ico" style="width:42px;height:42px;border-radius:13px;display:grid;place-items:center;background:var(--brand-soft);color:var(--brand)"><svg class="i"><use href="#i-rss"/></svg></span>
+      <div class="t-main"><div class="row" style="gap:8px"><b>{{ s.name }}</b><span class="badge">{{ s.get_kind_display }}</span>{% if s.is_active %}<span class="chip on"><span class="dot"></span>On</span>{% else %}<span class="chip">Off</span>{% endif %}</div>
+        <div class="meta">{% if s.community %}r/{{ s.community|truncatechars:70 }} · {% endif %}{% if s.query %}“{{ s.query|truncatechars:70 }}” · {% endif %}{{ s.found_count }} found · {% if s.last_checked %}checked {{ s.last_checked|timesince }} ago{% else %}not checked yet{% endif %}</div>
+        {% if s.last_error %}<div class="note neg">{{ s.last_error }}</div>{% endif %}</div>
+      <div class="t-right row" style="justify-content:flex-end">
+        <form method="post" action="{% url 'finder:toggle_source' s.pk %}">{% csrf_token %}<button class="btn btn-sm" type="submit">{% if s.is_active %}Turn off{% else %}Turn on{% endif %}</button></form>
+        <form method="post" action="{% url 'finder:delete_source' s.pk %}" onsubmit="return confirm('Remove this source?')">{% csrf_token %}<button class="btn btn-sm btn-danger" type="submit">Remove</button></form>
+      </div>
+    </div>
+  {% empty %}<div class="empty">No sources yet.</div>{% endfor %}
+  </div>
+</section>
+
+<div class="grid grid-2">
+  <section class="card">
+    <div class="card-head"><h3>➕ Add a source</h3></div>
+    <form method="post" class="stack">{% csrf_token %}
+      <div class="form-grid">
+        {% include "_field.html" with field=form.kind %}
+        {% include "_field.html" with field=form.name %}
+      </div>
+      {% include "_field.html" with field=form.community %}
+      {% include "_field.html" with field=form.query %}
+      {% include "_field.html" with field=form.url %}
+      <div><button class="btn btn-primary" type="submit">Add source</button></div>
+    </form>
+  </section>
+  <section class="card">
+    <div class="card-head"><h3>🔔 Free web-wide search with Google Alerts</h3></div>
+    <ol class="steps">
+      <li><span>Go to <a href="https://www.google.com/alerts" target="_blank" rel="noopener">google.com/alerts</a> and type a phrase, e.g. <b>"coding classes for kids"</b>.</span></li>
+      <li><span>Click <b>Show options</b> → Deliver to: <b>RSS feed</b> → Create Alert.</span></li>
+      <li><span>Click the orange <b>RSS</b> icon next to the alert, copy the address, and add it here as a <b>Google Alert</b> source.</span></li>
+    </ol>
+    <p class="muted small" style="margin-top:12px">Good alert ideas: "coding for kids", "kids coding club", "animation classes for kids", "learn python for kids", "my son wants to learn coding", "mumsnet coding", "minecraft coding kids".</p>
+  </section>
+</div>
+{% endblock %}

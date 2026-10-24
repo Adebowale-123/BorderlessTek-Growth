@@ -1,0 +1,56 @@
+{% extends "base.html" %}
+{% block title %}Today{% endblock %}
+{% block content %}
+<section class="hero">
+  <div class="hero-top">
+    <div>
+      <div class="eyebrow"><svg class="i"><use href="#i-today"/></svg>{% now "l j F" %}</div>
+      <h1>{% if new_count %}{{ new_count }} parent{{ new_count|pluralize }} to reply to{% else %}You're all caught up{% endif %}{% if due %} · {{ due|length }} follow-up{{ due|length|pluralize }}{% endif %}</h1>
+      <p class="lead">{% if new_count %}Parents are asking where their child can learn digital skills. Reply helpfully, mark it done, and turn interested parents into leads.{% else %}No new conversations right now. The desk searches {{ sources_count }} source{{ sources_count|pluralize }} every {{ site.scan_every_hours }} hours.{% endif %}</p>
+    </div>
+    <div class="row">
+      <form method="post" action="{% url 'core:scan_now' %}" data-busy="Searching…">{% csrf_token %}
+        <button class="btn btn-sm" type="submit" {% if scanning %}disabled{% endif %}><svg class="i"><use href="#i-refresh"/></svg>{% if scanning %}Searching…{% else %}Search now{% endif %}</button></form>
+      <a class="btn btn-primary btn-sm" href="{% url 'finder:inbox' %}"><svg class="i"><use href="#i-radar"/></svg>Open replies</a>
+    </div>
+  </div>
+  <div class="hero-stats">
+    <div class="glass"><div class="label">To reply</div><div class="value mono">{{ new_count }}</div><div class="sub">{{ hot_count }} hot</div></div>
+    <div class="glass"><div class="label">Replied this week</div><div class="value mono">{{ replied_week }}</div><div class="sub">helpful answers posted</div></div>
+    <div class="glass"><div class="label">New leads this week</div><div class="value mono">{{ leads_week }}</div><div class="sub">parents in conversation</div></div>
+    <div class="glass"><div class="label">Enrolled</div><div class="value mono">{{ enrolled_total }}</div><div class="sub">from the growth desk</div></div>
+  </div>
+  <div class="section-title" style="color:rgba(255,255,255,.6)">Pipeline</div>
+  <div class="funnel">{% for s, label, n in pipeline %}<a class="step" href="{% url 'leads:board' %}" style="color:#fff;text-decoration:none"><b>{{ n }}</b><span>{{ label }}</span></a>{% endfor %}</div>
+</section>
+
+{% if not site.booking_url %}<div class="notice" style="margin-bottom:16px"><div>Add your <b>onboarding call booking link</b> (e.g. Calendly) in <a href="{% url 'core:settings' %}">Settings</a>, so every drafted reply can invite parents to book a call.</div></div>{% endif %}
+
+<div class="grid grid-2" style="grid-template-columns:minmax(0,1.3fr) minmax(0,1fr)">
+  <section class="card">
+    <div class="card-head"><h3>🔥 Best conversations to answer</h3><a class="small" href="{% url 'finder:inbox' %}">See all →</a></div>
+    {% for o in hot %}
+      <a class="list-row" href="{% url 'finder:inbox' %}#opp-{{ o.pk }}">
+        <span class="score {{ o.heat }}" style="width:44px;height:44px;font-size:15px;border-radius:13px">{{ o.score }}</span>
+        <div class="grow"><b>{{ o.title }}</b><span class="small faint">{{ o.community }} · {% if o.published_at %}{{ o.published_at|timesince }} ago{% endif %}{% if o.child_age %} · child {{ o.child_age }}{% endif %}</span></div>
+      </a>
+    {% empty %}<div class="empty"><span class="big">🌱</span>Nothing waiting. New posts appear here as parents ask.</div>{% endfor %}
+  </section>
+  <div class="stack">
+    <section class="card">
+      <div class="card-head"><h3>📅 Follow-ups due</h3><a class="small" href="{% url 'leads:board' %}">Leads →</a></div>
+      {% for l in due %}
+        <a class="list-row" href="{% url 'leads:detail' l.pk %}"><span class="avatar">{{ l.parent_name|slice:":1" }}</span>
+          <div class="grow"><b>{{ l.parent_name }}</b><span class="small faint">{{ l.get_channel_display }} · follow-up {{ l.follow_ups_sent|add:1 }} · due {{ l.next_follow_up|date:"D j M" }}</span></div></a>
+      {% empty %}<div class="empty" style="padding:22px">No follow-ups due today.</div>{% endfor %}
+    </section>
+    <section class="card">
+      <div class="card-head"><h3>📞 Onboarding calls</h3></div>
+      {% for l in calls %}
+        <a class="list-row" href="{% url 'leads:detail' l.pk %}"><span class="avatar">{{ l.parent_name|slice:":1" }}</span>
+          <div class="grow"><b>{{ l.parent_name }}</b><span class="small faint">{% if l.call_at %}{{ l.call_at|date:"D j M, H:i" }}{% else %}time not set{% endif %}{% if l.child_age %} · child {{ l.child_age }}{% endif %}</span></div></a>
+      {% empty %}<div class="empty" style="padding:22px">No calls booked yet.</div>{% endfor %}
+    </section>
+  </div>
+</div>
+{% endblock %}

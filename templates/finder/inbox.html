@@ -1,0 +1,68 @@
+{% extends "base.html" %}
+{% block title %}Parents to reply{% endblock %}
+{% block content %}
+<div class="page-head">
+  <div><h1 class="mb-0">Parents to reply to</h1>
+    <p>Real parents asking about digital skills for their children. Open the post, copy the drafted reply (edit it to sound like you), post it, then mark it done. About 2 minutes each.</p></div>
+  <form method="post" action="{% url 'core:scan_now' %}" data-busy="Searching…">{% csrf_token %}<input type="hidden" name="next" value="{{ request.get_full_path }}">
+    <button class="btn" type="submit"><svg class="i"><use href="#i-refresh"/></svg>Search now</button></form>
+</div>
+
+<div class="row between" style="margin-bottom:16px">
+  <div class="tabs">
+    <a href="?show=new" class="{% if show == 'new' %}active{% endif %}">To reply ({{ counts.new }})</a>
+    <a href="?show=replied" class="{% if show == 'replied' %}active{% endif %}">Replied ({{ counts.replied }})</a>
+    <a href="?show=lead" class="{% if show == 'lead' %}active{% endif %}">Became leads ({{ counts.lead }})</a>
+    <a href="?show=low" class="{% if show == 'low' %}active{% endif %}">Lower scores ({{ counts.low }})</a>
+    <a href="?show=dismissed" class="{% if show == 'dismissed' %}active{% endif %}">Not relevant ({{ counts.dismissed }})</a>
+  </div>
+</div>
+
+<details class="panel">
+  <summary><span class="ico"><svg class="i"><use href="#i-plus"/></svg></span><div><b>Add a post you found</b><span class="sub">From a Facebook group, Mumsnet or anywhere else: paste it and get a drafted reply</span></div></summary>
+  <div class="panel-body">
+    <form method="post" action="{% url 'finder:add' %}" class="stack">{% csrf_token %}
+      {% include "_field.html" with field=manual_form.url %}
+      {% include "_field.html" with field=manual_form.text %}
+      <div><button class="btn btn-primary" type="submit">Score it and draft a reply</button></div>
+    </form>
+  </div>
+</details>
+
+<div class="opps">
+{% for o in opportunities %}
+  <article class="opp {% if o.heat == 'hot' %}hot{% endif %}" id="opp-{{ o.pk }}">
+    <div>
+      <div class="row" style="gap:12px">
+        <span class="score {{ o.heat }}">{{ o.score }}</span>
+        <div style="flex:1;min-width:0">
+          <span class="heat {{ o.heat }}">{% if o.heat == 'hot' %}🔥 Hot{% elif o.heat == 'warm' %}Warm{% else %}Possible{% endif %}</span>
+          <div class="meta" style="margin-top:6px"><span>{{ o.community }}</span>{% if o.author %}<span>{{ o.author }}</span>{% endif %}{% if o.published_at %}<span>{{ o.published_at|timesince }} ago</span>{% endif %}{% if o.manual %}<span>added by hand</span>{% endif %}</div>
+        </div>
+      </div>
+      <h3>{{ o.title }}</h3>
+      {% if o.body %}<div class="post">{{ o.body|truncatechars:1200 }}</div>{% endif %}
+      <div class="tags">{% if o.child_age %}<span class="tag">Child {{ o.child_age }}</span>{% endif %}{% for s in o.signals.skills %}<span class="tag">{{ s }}</span>{% endfor %}</div>
+      {% if o.signals.reasons %}<p class="faint small" style="margin:10px 0 0">Why it scored: {{ o.signals.reasons|join:" · " }}</p>{% endif %}
+    </div>
+    <div class="reply-box">
+      <label class="small" for="reply-{{ o.pk }}" style="font-weight:800">Drafted reply <span class="faint" style="font-weight:600">— edit freely, then copy</span></label>
+      <textarea id="reply-{{ o.pk }}">{{ o.draft_reply }}</textarea>
+      <div class="actions">
+        <a class="btn btn-sm" href="{{ o.url }}" target="_blank" rel="noopener"><svg class="i"><use href="#i-external"/></svg>Open post</a>
+        <button class="btn btn-sm btn-warm" type="button" data-copy="#reply-{{ o.pk }}"><svg class="i"><use href="#i-copy"/></svg>Copy reply</button>
+        {% if o.status == "new" %}
+        <form method="post" action="{% url 'finder:mark' o.pk 'replied' %}">{% csrf_token %}<input type="hidden" name="next" value="{{ request.get_full_path }}"><button class="btn btn-sm btn-primary" type="submit"><svg class="i"><use href="#i-check"/></svg>I replied</button></form>
+        <form method="post" action="{% url 'finder:mark' o.pk 'dismissed' %}">{% csrf_token %}<input type="hidden" name="next" value="{{ request.get_full_path }}"><button class="btn btn-sm" type="submit"><svg class="i"><use href="#i-x"/></svg>Not relevant</button></form>
+        {% endif %}
+        {% if o.status != "lead" %}<a class="btn btn-sm" href="{% url 'leads:new' %}?from={{ o.pk }}"><svg class="i"><use href="#i-users"/></svg>Make a lead</a>{% endif %}
+        {% if o.status == "dismissed" or o.status == "replied" %}<form method="post" action="{% url 'finder:mark' o.pk 'new' %}">{% csrf_token %}<input type="hidden" name="next" value="{{ request.get_full_path }}"><button class="btn btn-sm" type="submit">Move back</button></form>{% endif %}
+      </div>
+      <p class="faint small" style="margin:0">Post it as yourself, keep the disclosure line, and follow each community's rules. Some don't allow links; then remove it and offer to share details by message.</p>
+    </div>
+  </article>
+{% empty %}
+  <div class="card empty"><span class="big">🌱</span>{% if show == "new" %}No parents waiting for a reply right now. Click <b>Search now</b>, or add more sources.{% else %}Nothing here yet.{% endif %}</div>
+{% endfor %}
+</div>
+{% endblock %}

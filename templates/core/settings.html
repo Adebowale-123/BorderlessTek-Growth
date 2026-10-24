@@ -1,0 +1,41 @@
+{% extends "base.html" %}
+{% block title %}Settings{% endblock %}
+{% block content %}
+<div class="page-head"><div><h1 class="mb-0">Settings</h1><p>How replies are signed, what counts as a good match, and where the daily summary goes.</p></div></div>
+<form method="post">
+  {% csrf_token %}
+  {% if form.non_field_errors %}<div class="msg error">{{ form.non_field_errors|join:" " }}</div>{% endif %}
+  <details class="panel" open>
+    <summary><span class="ico"><svg class="i"><use href="#i-today"/></svg></span><div><b>Your business</b><span class="sub">{{ form.instance.company_name }}{% if form.instance.booking_url %} · booking link set{% else %} · add your booking link{% endif %}</span></div></summary>
+    <div class="panel-body"><div class="form-grid">
+      {% include "_field.html" with field=form.company_name %}
+      {% include "_field.html" with field=form.team_member_name %}
+      {% include "_field.html" with field=form.website_url %}
+      {% include "_field.html" with field=form.booking_url %}
+    </div></div>
+  </details>
+  <details class="panel" {% if form.errors %}open{% endif %}>
+    <summary><span class="ico"><svg class="i"><use href="#i-radar"/></svg></span><div><b>Finding parents</b><span class="sub">score ≥ {{ form.instance.min_score }} · posts up to {{ form.instance.max_age_days }} days old · every {{ form.instance.scan_every_hours }} h</span></div></summary>
+    <div class="panel-body"><div class="form-grid">
+      {% include "_field.html" with field=form.min_score %}
+      {% include "_field.html" with field=form.max_age_days %}
+      {% include "_field.html" with field=form.scan_every_hours %}
+    </div></div>
+  </details>
+  <details class="panel" {% if form.errors %}open{% endif %}>
+    <summary><span class="ico"><svg class="i"><use href="#i-bell"/></svg></span><div><b>Daily summary</b><span class="sub">{% if form.instance.telegram_chat_id %}Telegram{% else %}Telegram not set up{% endif %}{% if form.instance.email_list %} · email{% endif %} · {{ form.instance.digest_hour }}:00 UK time</span></div></summary>
+    <div class="panel-body"><div class="form-grid">
+      {% include "_field.html" with field=form.telegram_bot_token %}
+      {% include "_field.html" with field=form.telegram_chat_id %}
+      {% include "_field.html" with field=form.digest_emails %}
+      {% include "_field.html" with field=form.digest_hour %}
+    </div></div>
+  </details>
+  <div class="row">
+    <button class="btn btn-primary" type="submit"><svg class="i"><use href="#i-check"/></svg>Save settings</button>
+    <button class="btn" type="submit" form="test-alert"><svg class="i"><use href="#i-send"/></svg>Send a test message</button>
+  </div>
+</form>
+<form id="test-alert" method="post" action="{% url 'core:test_alert' %}">{% csrf_token %}</form>
+{% if not tick_key_set %}<p class="faint small" style="margin-top:18px">Automatic searching needs a scheduler link (TICK_KEY), set up during deployment.</p>{% endif %}
+{% endblock %}
