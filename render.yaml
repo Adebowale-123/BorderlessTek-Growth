@@ -5,6 +5,7 @@ services:
     name: borderlesstek-growth
     runtime: python
     plan: free
+    region: frankfurt  # closest Render region to the UK; create the Neon database in Europe too
     buildCommand: "./build.sh"
     # One process with threads, so the background scan and the pages share one place.
     startCommand: "gunicorn config.wsgi:application --workers 1 --threads 4 --timeout 120"
