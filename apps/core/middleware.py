@@ -2,7 +2,7 @@ from django.conf import settings
 from django.shortcuts import redirect
 from django.urls import reverse
 
-OPEN_PATHS = ("/login/", "/admin/", "/static/", "/healthz/", "/tick/")
+OPEN_PATHS = ("/login/", "/password-reset/", "/admin/", "/static/", "/healthz/", "/tick/")
 
 
 class LoginRequiredMiddleware:

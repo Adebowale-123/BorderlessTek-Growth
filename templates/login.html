@@ -24,6 +24,7 @@
         {% if form.non_field_errors %}<div class="msg error">Wrong username or password.</div>{% endif %}
         <div class="field"><label for="id_username">Username</label>{{ form.username }}</div>
         <div class="field"><label for="id_password">Password</label>{{ form.password }}</div>
+        <div style="text-align:right;margin-top:-6px"><a class="small" href="{% url 'password_reset' %}">Forgot password?</a></div>
         <input type="hidden" name="next" value="{{ next }}">
         <button class="btn btn-primary btn-lg" type="submit" style="width:100%">Log in</button>
       </form>

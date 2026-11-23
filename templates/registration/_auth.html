@@ -1,0 +1,19 @@
+{% extends "base.html" %}
+{% block shell %}
+<div class="login-wrap">
+  <section class="login-art">
+    <a class="logo" style="color:#fff" href="{% url 'login' %}"><span class="logo-mark bt">B</span>BorderlessTek Growth</a>
+    <div>
+      <h2>Locked out? Let's get you back in.</h2>
+      <p>Reset links work once and expire after a few days, so your account stays safe.</p>
+    </div>
+    <div></div>
+  </section>
+  <section class="login-form">
+    <div class="login-box">
+      {% block box %}{% endblock %}
+      <p class="small" style="margin-top:22px"><a href="{% url 'login' %}">← Back to log in</a></p>
+    </div>
+  </section>
+</div>
+{% endblock %}
