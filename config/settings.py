@@ -123,6 +123,11 @@ EMAIL_HOST_USER = env("EMAIL_HOST_USER", "")
 EMAIL_HOST_PASSWORD = env("EMAIL_HOST_PASSWORD", "")
 EMAIL_USE_TLS = env_bool("EMAIL_USE_TLS", True)
 DEFAULT_FROM_EMAIL = env("DEFAULT_FROM_EMAIL", "BorderlessTek Growth <growth@borderlesstek.local>")
+EMAIL_TIMEOUT = 20  # never hang a page on a slow or blocked mail server
+# Render's free plan blocks SMTP; with a Brevo API key, email goes over HTTPS instead.
+BREVO_API_KEY = env("BREVO_API_KEY", "")
+if BREVO_API_KEY:
+    EMAIL_BACKEND = "apps.core.email_backends.BrevoEmailBackend"
 
 if not DEBUG:
     SESSION_COOKIE_SECURE = True
